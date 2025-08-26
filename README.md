@@ -1,2 +1,2 @@
-# mypawon
-system pawon
+# allcattel
+system alcattel
