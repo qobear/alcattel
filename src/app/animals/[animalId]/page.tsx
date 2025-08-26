@@ -10,6 +10,7 @@ import MeasurementForm from "@/components/measurements/measurement-form"
 import HealthEventList from "@/components/health/health-event-list"
 import USGList from "@/components/reproduction/usg-list"
 import MilkYieldList from "@/components/milk/milk-yield-list"
+import { MediaUpload } from "@/components/media/media-upload"
 import { 
   ArrowLeft, 
   Edit, 
@@ -139,6 +140,10 @@ export default function AnimalDetailPage() {
 
   const handleAddMedia = () => {
     router.push(`/animals/${animalId}/media/add`)
+  }
+
+  const fetchAnimal = () => {
+    loadAnimalDetail()
   }
 
   const calculateAge = (birthDate?: string) => {
@@ -424,53 +429,50 @@ export default function AnimalDetailPage() {
 
         <TabsContent value="media">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle>Media Hewan</CardTitle>
-              <Button onClick={handleAddMedia}>
-                <Camera className="h-4 w-4 mr-2" />
-                Tambah Media
-              </Button>
             </CardHeader>
             <CardContent>
-              {animal.media.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {animal.media.map((media) => (
-                    <div key={media.id} className="space-y-2">
-                      <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                        {media.kind === "PHOTO" ? (
-                          <img
-                            src={media.url}
-                            alt={`${media.pose} view`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <video
-                            src={media.url}
-                            className="w-full h-full object-cover"
-                            controls
-                          />
-                        )}
+              <MediaUpload 
+                animalId={animal.id}
+                onUploadComplete={() => {
+                  // Refresh animal data to show new media
+                  fetchAnimal()
+                }}
+              />
+              
+              {animal.media.length > 0 && (
+                <div className="mt-8">
+                  <h4 className="text-lg font-semibold mb-4">Media yang sudah diupload</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {animal.media.map((media) => (
+                      <div key={media.id} className="space-y-2">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                          {media.kind === "PHOTO" ? (
+                            <img
+                              src={media.url}
+                              alt={`${media.pose} view`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <video
+                              src={media.url}
+                              className="w-full h-full object-cover"
+                              controls
+                            />
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <Badge variant="secondary" className="text-xs">
+                            {media.pose}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(media.takenAt).toLocaleDateString('id-ID')}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-sm font-semibold capitalize">{media.pose.toLowerCase()}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(media.takenAt).toLocaleDateString("id-ID")}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Camera className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-semibold mb-2">Belum ada media</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Tambahkan foto dan video untuk dokumentasi hewan
-                  </p>
-                  <Button onClick={handleAddMedia}>
-                    <Camera className="h-4 w-4 mr-2" />
-                    Tambah Media
-                  </Button>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>

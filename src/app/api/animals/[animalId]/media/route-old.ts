@@ -67,9 +67,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const body = await request.json()
     const { pose, contentType, fileName } = mediaUploadSchema.parse(body)
     
-    // Validate animal exists
-    const animal = await prisma.animal.findUnique({
-      where: { id: params.animalId }
+    // Validate animal access
+    const animal = await prisma.animal.findFirst({
+      where: {
+        id: params.animalId,
+        farm: {
+          tenantId: session.user.tenantId
+        }
+      }
     })
 
     if (!animal) {
@@ -81,16 +86,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const key = `animals/${params.animalId}/${pose}/${uuidv4()}.${fileExtension}`
 
     // Generate signed URL using existing function
-    const signedData = await s3CreatePresignedPut({
-      key,
-      contentType,
-      expiresIn: 3600 // 1 hour
-    })
+    const { url, fields } = await s3CreatePresignedPut(key, contentType)
 
     return NextResponse.json({
-      signedUrl: signedData.url,
+      signedUrl: url,
       key,
-      fields: signedData.fields
+      fields
     })
 
   } catch (error) {
@@ -137,6 +138,76 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
     return NextResponse.json(
       { error: 'Failed to record media' },
+      { status: 500 }
+    )
+  }
+}
+      uploadUrl: url, 
+      fields, 
+      key,
+      metadata: {
+        kind: isVideo ? "VIDEO" : "PHOTO",
+        pose: data.pose,
+        animalId: params.animalId,
+      }
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Validation error", details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    console.error("Error generating upload URL:", error)
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
+  }
+}
+
+// Confirm upload and save metadata
+export async function PUT(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const data = mediaCreateSchema.parse(body)
+
+    // Check if animal exists
+    const animal = await prisma.animal.findUnique({
+      where: { id: params.animalId },
+      select: { id: true }
+    })
+
+    if (!animal) {
+      return NextResponse.json({ error: "Animal not found" }, { status: 404 })
+    }
+
+    const media = await prisma.animalMedia.create({
+      data: {
+        ...data,
+        animalId: params.animalId,
+        takenAt: new Date(),
+      },
+    })
+
+    return NextResponse.json(media, { status: 201 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Validation error", details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    console.error("Error saving media metadata:", error)
+    return NextResponse.json(
+      { error: "Internal server error" },
       { status: 500 }
     )
   }

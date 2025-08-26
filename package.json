@@ -29,6 +29,7 @@
     "@radix-ui/react-toast": "^1.2.2",
     "@stackframe/stack": "^2.8.32",
     "@tanstack/react-query": "^5.28.9",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.21",
     "aws-sdk": "^2.1691.0",
     "bcryptjs": "^2.4.3",
@@ -45,6 +46,7 @@
     "react-hook-form": "^7.62.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.1.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
