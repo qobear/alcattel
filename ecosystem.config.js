@@ -3,9 +3,9 @@ module.exports = {
     name: 'allcattle-farm',
     script: 'npm',
     args: 'start',
-    cwd: '/var/www/allcattle',
-    instances: 2,
-    exec_mode: 'cluster',
+    cwd: '/var/allcattel',
+    instances: 1,
+    exec_mode: 'fork',
     
     // Environment variables
     env: {
@@ -15,9 +15,9 @@ module.exports = {
     },
     
     // Logging
-    error_file: '/var/www/allcattle/logs/error.log',
-    out_file: '/var/www/allcattle/logs/out.log',
-    log_file: '/var/www/allcattle/logs/combined.log',
+    error_file: '/var/allcattel/logs/error.log',
+    out_file: '/var/allcattel/logs/out.log',
+    log_file: '/var/allcattel/logs/combined.log',
     time: true,
     
     // Process management
