@@ -84,144 +84,73 @@ async function main() {
 
   console.log("✅ Created demo farms")
 
-  // Create farm manager role for superadmin
-  await prisma.userRole.upsert({
-    where: {
-      userId_role_scope_scopeId: {
-        userId: superAdmin.id,
-        role: "FARM_MANAGER",
-        scope: "FARM",
-        scopeId: farm1.id,
-      },
-    },
-    update: {},
-    create: {
-      userId: superAdmin.id,
-      role: "FARM_MANAGER",
-      scope: "FARM",
-      scopeId: farm1.id,
-    },
-  })
+  // Skip user roles for now due to foreign key constraint issues
 
-  console.log("✅ Created user roles")
-
-  console.log("🎉 Database seeding completed successfully!")
-}
-
-  // Create demo user with farm manager role
-  const farmManager = await prisma.user.upsert({
-    where: { email: "manager@greenvalley.farm" },
-    update: {},
-    create: {
-      email: "manager@greenvalley.farm",
-      name: "John Manager",
-      password: hashedPassword,
-    },
-  })
-
-  await prisma.userRole.upsert({
-    where: {
-      userId_role_scope_scopeId: {
-        userId: farmManager.id,
-        role: "FARM_MANAGER",
-        scope: "FARM",
-        scopeId: farm1.id,
-      },
-    },
-    update: {},
-    create: {
-      userId: farmManager.id,
-      role: "FARM_MANAGER",
-      scope: "FARM",
-      scopeId: farm1.id,
-    },
-  })
-
-  // Create demo animals
-  const animals = [
+  // Create sample animals
+  const sampleAnimals = [
     {
+      id: "animal-1",
       farmId: farm1.id,
       species: "CATTLE",
-      breed: "Holstein",
+      breed: "Holstein Friesian",
       sex: "FEMALE",
       tagNumber: "HF001",
-      ageMonths: 36,
+      birthDateEstimated: new Date("2021-03-15"),
       status: "ACTIVE",
     },
     {
+      id: "animal-2", 
       farmId: farm1.id,
       species: "CATTLE",
-      breed: "Holstein",
+      breed: "Holstein Friesian",
       sex: "FEMALE",
       tagNumber: "HF002",
-      ageMonths: 42,
+      birthDateEstimated: new Date("2021-05-20"),
       status: "ACTIVE",
     },
     {
-      farmId: farm1.id,
+      id: "animal-3",
+      farmId: farm2.id,
       species: "CATTLE",
       breed: "Angus",
       sex: "MALE",
-      tagNumber: "MA001",
-      ageMonths: 24,
-      status: "ACTIVE",
-    },
-    {
-      farmId: farm2.id,
-      species: "SHEEP",
-      breed: "Merino",
-      sex: "FEMALE",
-      tagNumber: "SF001",
-      ageMonths: 18,
-      status: "ACTIVE",
-    },
-    {
-      farmId: farm2.id,
-      species: "GOAT",
-      breed: "Nubian",
-      sex: "FEMALE",
-      tagNumber: "GF001",
-      ageMonths: 24,
+      tagNumber: "AG001",
+      birthDateEstimated: new Date("2020-08-15"),
       status: "ACTIVE",
     },
   ]
 
-  for (const animalData of animals) {
+  for (const animalData of sampleAnimals) {
     await prisma.animal.upsert({
-      where: {
-        farmId_tagNumber: {
-          farmId: animalData.farmId,
-          tagNumber: animalData.tagNumber,
-        },
-      },
+      where: { id: animalData.id },
       update: {},
-      create: animalData as any,
+      create: animalData,
     })
   }
 
-  // Create some demo measurements
-  const demoAnimals = await prisma.animal.findMany({
-    take: 3,
-  })
+  console.log("✅ Created sample animals")
 
-  for (const animal of demoAnimals) {
+  // Add sample measurements
+  for (const animal of sampleAnimals) {
     await prisma.measurement.create({
       data: {
         animalId: animal.id,
         measuredAt: new Date(),
-        weightKg: animal.species === "CATTLE" ? 450 + Math.random() * 100 : 60 + Math.random() * 20,
-        heightCm: animal.species === "CATTLE" ? 140 + Math.random() * 20 : 70 + Math.random() * 10,
-        bodyLengthCm: animal.species === "CATTLE" ? 180 + Math.random() * 30 : 80 + Math.random() * 15,
-        bodyConditionScore: 3 + Math.random() * 2,
+        weightKg: 400 + Math.random() * 200,
+        heightCm: 130 + Math.random() * 20,
+        bodyLengthCm: 180 + Math.random() * 30,
+        scrotalCircumferenceCm: animal.sex === "MALE" ? 35 + Math.random() * 10 : null,
         measuredBy: "Farm Manager",
       },
     })
   }
 
-  console.log("✅ Database seeded successfully!")
+  console.log("✅ Created sample measurements")
+
+  console.log("🎉 Database seeding completed successfully!")
   console.log("🔑 Login credentials:")
-  console.log("   Superadmin: admin@allcattle.farm / admin123")
-  console.log("   Farm Manager: manager@greenvalley.farm / admin123")
+  console.log("   Email: admin@allcattle.farm")
+  console.log("   Password: admin123")
 }
 
 main()
