@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: allcattle-postgres
+    environment:
+      POSTGRES_DB: allcattle
+      POSTGRES_USER: allcattle
+      POSTGRES_PASSWORD: allcattle123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - allcattle-network
+
+  # Redis (for caching and queues)
+  redis:
+    image: redis:7-alpine
+    container_name: allcattle-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - allcattle-network
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: allcattle-app
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://allcattle:allcattle123@postgres:5432/allcattle
+      - NEXTAUTH_SECRET=your-production-secret-here
+      - NEXTAUTH_URL=http://localhost:3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - allcattle-network
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  allcattle-network:
+    driver: bridge

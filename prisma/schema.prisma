@@ -1,0 +1,307 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  plan        String   @default("basic")
+  maxCompanies Int     @default(1)
+  maxFarms    Int      @default(5)
+  maxAnimals  Int      @default(100)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companies Company[]
+  users     UserRole[]
+  auditLogs AuditLog[]
+
+  @@map("tenants")
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  location  String?
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  farms  Farm[]
+  users  UserRole[]
+
+  @@unique([tenantId, name])
+  @@map("companies")
+}
+
+model Farm {
+  id        String   @id @default(cuid())
+  companyId String   @map("company_id")
+  name      String
+  location  String?
+  address   String?
+  gpsLat    Float?   @map("gps_lat")
+  gpsLng    Float?   @map("gps_lng")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  animals Animal[]
+  users   UserRole[]
+
+  @@unique([companyId, name])
+  @@map("farms")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roles     UserRole[]
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+enum RoleType {
+  SUPERADMIN
+  TENANT_ADMIN
+  COMPANY_ADMIN
+  FARM_MANAGER
+  ENUMERATOR
+  VET
+  ANALYST
+}
+
+enum ScopeType {
+  GLOBAL
+  TENANT
+  COMPANY
+  FARM
+}
+
+model UserRole {
+  id       String    @id @default(cuid())
+  userId   String    @map("user_id")
+  role     RoleType
+  scope    ScopeType
+  scopeId  String?   @map("scope_id")
+  isActive Boolean   @default(true)
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant  Tenant?  @relation(fields: [scopeId], references: [id], map: "user_roles_tenant_fkey")
+  company Company? @relation(fields: [scopeId], references: [id], map: "user_roles_company_fkey")
+  farm    Farm?    @relation(fields: [scopeId], references: [id], map: "user_roles_farm_fkey")
+
+  @@unique([userId, role, scope, scopeId])
+  @@map("user_roles")
+}
+
+enum Species {
+  CATTLE
+  SHEEP
+  GOAT
+  BUFFALO
+  HORSE
+  CAMEL
+  LLAMA
+}
+
+enum Sex {
+  MALE
+  FEMALE
+}
+
+enum AnimalStatus {
+  ACTIVE
+  SOLD
+  DIED
+  TRANSFERRED
+}
+
+model Animal {
+  id                String        @id @default(cuid())
+  farmId            String        @map("farm_id")
+  species           Species
+  breed             String
+  sex               Sex
+  tagNumber         String        @map("tag_number")
+  birthDateEstimated DateTime?    @map("birthdate_estimated")
+  ageMonths         Int?          @map("age_months")
+  status            AnimalStatus  @default(ACTIVE)
+  parentMaleId      String?       @map("parent_male_id")
+  parentFemaleId    String?       @map("parent_female_id")
+  notes             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  farm         Farm          @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  parentMale   Animal?       @relation("MaleParent", fields: [parentMaleId], references: [id])
+  parentFemale Animal?       @relation("FemaleParent", fields: [parentFemaleId], references: [id])
+  maleOffspring    Animal[]  @relation("MaleParent")
+  femaleOffspring  Animal[]  @relation("FemaleParent")
+  
+  media          AnimalMedia[]
+  measurements   Measurement[]
+  reproductions  ReproUSG[]
+  milkRecords    MilkYield[]
+  healthEvents   HealthEvent[]
+
+  @@unique([farmId, tagNumber])
+  @@map("animals")
+}
+
+enum MediaKind {
+  PHOTO
+  VIDEO
+}
+
+enum MediaPose {
+  FRONT
+  LEFT
+  RIGHT
+  GAIT
+}
+
+model AnimalMedia {
+  id         String    @id @default(cuid())
+  animalId   String    @map("animal_id")
+  kind       MediaKind
+  pose       MediaPose
+  url        String
+  thumbnailUrl String? @map("thumbnail_url")
+  fileSize   Int?      @map("file_size")
+  mimeType   String?   @map("mime_type")
+  checksum   String?
+  takenAt    DateTime  @map("taken_at")
+  createdAt  DateTime  @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@map("animal_media")
+}
+
+model Measurement {
+  id                      String   @id @default(cuid())
+  animalId                String   @map("animal_id")
+  measuredAt              DateTime @map("measured_at")
+  weightKg                Float?   @map("weight_kg")
+  heightCm                Float?   @map("height_cm")
+  bodyLengthCm            Float?   @map("body_length_cm")
+  scrotalCircumferenceCm  Float?   @map("scrotal_circumference_cm")
+  bodyConditionScore      Float?   @map("body_condition_score")
+  measuredBy              String?  @map("measured_by")
+  notes                   String?
+  createdAt               DateTime @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@map("measurements")
+}
+
+enum USGResult {
+  PREGNANT
+  EMPTY
+  INCONCLUSIVE
+}
+
+model ReproUSG {
+  id              String     @id @default(cuid())
+  animalId        String     @map("animal_id")
+  date            DateTime
+  result          USGResult
+  fetusAgeWeeks   Int?       @map("fetus_age_weeks")
+  expectedCalving DateTime?  @map("expected_calving")
+  operator        String
+  notes           String?
+  createdAt       DateTime   @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@map("repro_usg")
+}
+
+enum MilkSession {
+  MORNING
+  EVENING
+}
+
+model MilkYield {
+  id        String      @id @default(cuid())
+  animalId  String      @map("animal_id")
+  date      DateTime
+  liters    Float
+  session   MilkSession
+  quality   String?
+  notes     String?
+  createdAt DateTime    @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@unique([animalId, date, session])
+  @@map("milk_yield")
+}
+
+enum HealthEventType {
+  VACCINE
+  TREATMENT
+  DIAGNOSIS
+  SURGERY
+  DEATH
+}
+
+model HealthEvent {
+  id          String           @id @default(cuid())
+  animalId    String           @map("animal_id")
+  date        DateTime
+  type        HealthEventType
+  title       String
+  description String?
+  medication  String?
+  dosage      String?
+  veterinarian String?
+  cost        Float?
+  nextDue     DateTime?        @map("next_due")
+  createdAt   DateTime         @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@map("health_events")
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  actorId  String   @map("actor_id")
+  tenantId String?  @map("tenant_id")
+  entity   String
+  entityId String   @map("entity_id")
+  action   String
+  before   Json?
+  after    Json?
+  at       DateTime @default(now())
+
+  actor  User    @relation(fields: [actorId], references: [id])
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@map("audit_logs")
+}
