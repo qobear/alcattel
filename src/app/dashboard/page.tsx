@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TenantSwitcher } from "@/components/navigation/tenant-switcher"
+import { NotificationSystem } from "@/components/notifications/notification-system"
 
 interface DashboardStats {
   totalAnimals: number
@@ -105,6 +106,7 @@ export default function DashboardPage() {
             
             {/* Tenant Switcher */}
             <div className="flex items-center space-x-4">
+              <NotificationSystem />
               <TenantSwitcher 
                 currentContext={currentContext}
                 onContextChange={setCurrentContext}

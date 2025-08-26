@@ -77,8 +77,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  roles     UserRole[]
-  auditLogs AuditLog[]
+  roles         UserRole[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -304,4 +305,24 @@ model AuditLog {
   tenant Tenant? @relation(fields: [tenantId], references: [id])
 
   @@map("audit_logs")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String   // 'health_alert', 'production_update', 'system_notification', etc.
+  title     String
+  message   String
+  priority  String   @default("medium") // 'low', 'medium', 'high', 'critical'
+  read      Boolean  @default(false)
+  readAt    DateTime? @map("read_at")
+  metadata  Json?    // Additional data like animal_id, farm_id, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
+  @@map("notifications")
 }
