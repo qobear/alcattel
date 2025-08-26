@@ -12,8 +12,21 @@ IP Address: 139.180.186.21
 Username: root
 Password: 6Rc)74b9@?+{yNAT
 
+git config --global user.name "AllCattle Developer" && git config --global user.email "developer@allcattle.farm"
+git branch -m main
+git add .
+git status
+
 npx prisma db push
 npm run db:seed
+cd /var/allcattle
+pm2 restart allcattle-farm
+npx prisma generate
+npm run build && pm2 restart allcattle-farm
+npm run build
+npm run dev
+
+USER allcattle_user WITH PASSWORD 'AllCattle2024
 
 Script Multi Tenant ambil darisini: https://github.com/stack-auth/multi-tenant-starter-template.git
 ---
