@@ -12,7 +12,11 @@ IP Address: 139.180.186.21
 Username: root
 Password: 6Rc)74b9@?+{yNAT
 
-git config --global user.name "AllCattle Developer" && git config --global user.email "developer@allcattle.farm"
+allcattel
+git@github.com:qobear/alcattel.git
+SHA256:QozYeh/Uim3KQ3pFazkeyoRSZtzwvW9otB0jwG5Re+M
+Added on Aug 26, 2025
+git config --global user.name "AllCattle Developer" && git config --global user.email "mbotee@gmail.com"
 git branch -m main
 git add .
 git status
