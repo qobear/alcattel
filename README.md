@@ -269,4 +269,4 @@ This project is licensed under the MIT License.
 For support and questions:
 - Email: support@allcattle.farm
 - Documentation: [docs.allcattle.farm](https://docs.allcattle.farm)
-- Issues: [GitHub Issues](https://github.com/allcattle/farm/issues)
+- Issues: [GitHub Issues](https://github.com/qobear/alcattel/issues)
